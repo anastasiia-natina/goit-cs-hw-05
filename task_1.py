@@ -2,6 +2,7 @@ import asyncio
 import argparse
 import logging
 import os
+import shutil
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -40,7 +41,7 @@ async def read_folder(folder):
 async def copy_file(filename, folder):
     file_extension = os.path.splitext(filename)[1]
     output_subfolder = os.path.join(async_output_folder, file_extension[1:])
-
+    
     if not os.path.exists(output_subfolder):
         try:
             os.makedirs(output_subfolder)
@@ -50,10 +51,12 @@ async def copy_file(filename, folder):
 
     source_file = os.path.join(folder, filename)
     destination_file = os.path.join(output_subfolder, filename)
-
+    
     try:
-        await asyncio.copyfile(source_file, destination_file)
-        logging.info(f"Скопійовано файл {filename} до {destination_file}")
+        async with open(source_file, 'rb') as f_in, open(destination_file, 'wb') as f_out:
+            await shutil.copyfileobj(f_in, f_out)
+            logging.info(f"Скопійовано файл {filename} до {destination_file}")
+
     except Exception as e:
         logging.error(f"Помилка при копіюванні файлу {filename}: {e}")
 
